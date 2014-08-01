@@ -1,22 +1,22 @@
-# karma-junit-reporter
+# karma-nunit2-reporter
 
-> Reporter for the JUnit XML format.
+> Reporter for the NUnit XML format. A direct port from karma-junit-reporter. The name nunit2 does not reflect the version of nunit. karma-nunit-reporter is another project.
 
 ## Installation
 
-The easiest way is to keep `karma-junit-reporter` as a devDependency in your `package.json`.
+The easiest way is to keep `karma-nunit2-reporter` as a devDependency in your `package.json`.
 ```json
 {
   "devDependencies": {
     "karma": "~0.10",
-    "karma-junit-reporter": "~0.1"
+    "karma-nunit2-reporter": "~0.1"
   }
 }
 ```
 
 You can simple do it by:
 ```bash
-npm install karma-junit-reporter --save-dev
+npm install karma-nunit2-reporter --save-dev
 ```
 
 ## Configuration
@@ -27,7 +27,7 @@ module.exports = function(config) {
     reporters: ['progress', 'junit'],
 
     // the default configuration
-    junitReporter: {
+    nunitReporter: {
       outputFile: 'test-results.xml',
       suite: ''
     }
@@ -37,7 +37,7 @@ module.exports = function(config) {
 
 You can pass list of reporters as a CLI argument too:
 ```bash
-karma start --reporters junit,dots
+karma start --reporters nunit,dots
 ```
 
 ----
