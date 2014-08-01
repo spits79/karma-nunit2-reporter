@@ -1,14 +1,14 @@
 {
-  "name": "karma-junit-reporter",
-  "version": "0.2.2",
-  "description": "A Karma plugin. Report results in junit xml format.",
+  "name": "karma-nunit2-reporter",
+  "version": "0.0.1",
+  "description": "A Karma plugin. Report results in nunit xml format.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/karma-runner/karma-junit-reporter.git"
+    "url": "git://github.com/martinmcwhorter/karma-nunit2-reporter.git"
   },
   "keywords": [
     "karma-plugin",
