@@ -5,7 +5,7 @@ var builder = require('xmlbuilder');
 
 
 var NUnitReporter = function(baseReporterDecorator, config, logger, helper, formatError) {
-  var log = logger.create('reporter.junit');
+  var log = logger.create('reporter.nunit');
   var reporterConfig = config.nunitReporter || {};
   var pkgName = reporterConfig.suite || '';
   var outputFile = helper.normalizeWinPath(path.resolve(config.basePath, reporterConfig.outputFile
@@ -114,7 +114,7 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
   };
 };
 
-JUnitReporter.$inject = ['baseReporterDecorator', 'config', 'logger', 'helper', 'formatError'];
+NUnitReporter.$inject = ['baseReporterDecorator', 'config', 'logger', 'helper', 'formatError'];
 
 // PUBLISH DI MODULE
 module.exports = {
