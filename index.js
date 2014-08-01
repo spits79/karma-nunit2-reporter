@@ -4,9 +4,9 @@ var fs = require('fs');
 var builder = require('xmlbuilder');
 
 
-var JUnitReporter = function(baseReporterDecorator, config, logger, helper, formatError) {
+var NUnitReporter = function(baseReporterDecorator, config, logger, helper, formatError) {
   var log = logger.create('reporter.junit');
-  var reporterConfig = config.junitReporter || {};
+  var reporterConfig = config.nunitReporter || {};
   var pkgName = reporterConfig.suite || '';
   var outputFile = helper.normalizeWinPath(path.resolve(config.basePath, reporterConfig.outputFile
       || 'test-results.xml'));
@@ -25,15 +25,15 @@ var JUnitReporter = function(baseReporterDecorator, config, logger, helper, form
 
   var initliazeXmlForBrowser = function(browser) {
     var timestamp = (new Date()).toISOString().substr(0, 19);
-    var suite = suites[browser.id] = xml.ele('testsuite', {
-      name: browser.name, 'package': pkgName, timestamp: timestamp, id: 0, hostname: os.hostname()
+    var suite = suites[browser.id] = xml.ele('test-suite', {
+      name: browser.name, 'package': pkgName, date: timestamp
     });
-    suite.ele('properties').ele('property', {name: 'browser.fullName', value: browser.fullName});
+    //suite.ele('properties').ele('property', {name: 'browser.fullName', value: browser.fullName});
   };
 
   this.onRunStart = function(browsers) {
     suites = Object.create(null);
-    xml = builder.create('testsuites');
+    xml = builder.create('test-results');
 
     // TODO(vojta): remove once we don't care about Karma 0.10
     browsers.forEach(initliazeXmlForBrowser);
@@ -54,13 +54,13 @@ var JUnitReporter = function(baseReporterDecorator, config, logger, helper, form
 
     var result = browser.lastResult;
 
-    suite.att('tests', result.total);
-    suite.att('errors', result.disconnected || result.error ? 1 : 0);
+    suite.att('total', result.total);
+    //suite.att('errors', result.disconnected || result.error ? 1 : 0);
     suite.att('failures', result.failed);
-    suite.att('time', (result.netTime || 0) / 1000);
+    //suite.att('time', (result.netTime || 0) / 1000);
 
-    suite.ele('system-out').dat(allMessages.join() + '\n');
-    suite.ele('system-err');
+    //suite.ele('system-out').dat(allMessages.join() + '\n');
+    //suite.ele('system-err');
   };
 
   this.onRunComplete = function() {
@@ -70,9 +70,9 @@ var JUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     helper.mkdirIfNotExists(path.dirname(outputFile), function() {
       fs.writeFile(outputFile, xmlToOutput.end({pretty: true}), function(err) {
         if (err) {
-          log.warn('Cannot write JUnit xml\n\t' + err.message);
+          log.warn('Cannot write NUnit xml\n\t' + err.message);
         } else {
-          log.debug('JUnit results written to "%s".', outputFile);
+          log.debug('NUnit results written to "%s".', outputFile);
         }
 
         if (!--pendingFileWritings) {
@@ -86,20 +86,22 @@ var JUnitReporter = function(baseReporterDecorator, config, logger, helper, form
   };
 
   this.specSuccess = this.specSkipped = this.specFailure = function(browser, result) {
-    var spec = suites[browser.id].ele('testcase', {
+    var spec = suites[browser.id].ele('results').ele('test-case', {
       name: result.description, time: ((result.time || 0) / 1000),
-      classname: (pkgName ? pkgName + ' ' : '') + browser.name + '.' + result.suite.join(' ').replace(/\./g, '_')
+      description: (pkgName ? pkgName + ' ' : '') + browser.name + '.' + result.suite.join(' ').replace(/\./g, '_'),
+      executed: result.skipped ? 'False' : 'True'
+      success: result.success  ? 'True' : 'False'
     });
 
-    if (result.skipped) {
-      spec.ele('skipped');
-    }
+    //if (result.skipped) {
+    //  spec.ele('skipped');
+    //}
 
-    if (!result.success) {
-      result.log.forEach(function(err) {
-        spec.ele('failure', {type: ''}, formatError(err));
-      });
-    }
+    //if (!result.success) {
+    //  result.log.forEach(function(err) {
+    //    spec.ele('failure', {type: ''}, formatError(err));
+    //  });
+    //}
   };
 
   // wait for writing all the xml files, before exiting
@@ -116,5 +118,5 @@ JUnitReporter.$inject = ['baseReporterDecorator', 'config', 'logger', 'helper', 
 
 // PUBLISH DI MODULE
 module.exports = {
-  'reporter:junit': ['type', JUnitReporter]
+  'reporter:nunit': ['type', NUnitReporter]
 };
