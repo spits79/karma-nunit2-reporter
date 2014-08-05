@@ -1,6 +1,6 @@
 {
   "name": "karma-nunit2-reporter",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A Karma plugin. Report results in nunit xml format.",
   "main": "index.js",
   "scripts": {
@@ -13,9 +13,9 @@
   "keywords": [
     "karma-plugin",
     "karma-reporter",
-    "junit"
+    "nunit"
   ],
-  "author": "Vojta Jina <vojta.jina@gmail.com>",
+  "author": "Martin McWhorter <martin@mcwhorter.org>, Vojta Jina <vojta.jina@gmail.com>",
   "dependencies": {
     "xmlbuilder": "0.4.2"
   },
