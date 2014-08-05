@@ -13,9 +13,13 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
 
   var xml;
   var suites;
+  var results;
   var pendingFileWritings = 0;
   var fileWritingFinished = function() {};
   var allMessages = [];
+  var totalSuccess = 0;
+  var totalFailures = 0;
+  var totalSkipped = 0;
 
   baseReporterDecorator(this);
 
@@ -24,27 +28,59 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
   }];
 
   var initliazeXmlForBrowser = function(browser) {
-    var timestamp = (new Date()).toISOString().substr(0, 19);
+
     var suite = suites[browser.id] = xml.ele('test-suite', {
-      name: browser.name, 'package': pkgName, date: timestamp
+      name: browser.name
     });
+    
+    results[browser.id] = suite.ele('results');
+
     //suite.ele('properties').ele('property', {name: 'browser.fullName', value: browser.fullName});
   };
 
   this.onRunStart = function(browsers) {
     suites = Object.create(null);
+    results = Object.create(null);
     xml = builder.create('test-results');
+
+    xml.att('name', "Karma Results")
+
+    var d = new Date();
+    var date = d.toISOString().substr(0, 10);
+    var time = d.toISOString().substr(11, 8);
+    xml.att('date', date);
+    xml.att('time', time);
+
+    // required attr we don't have data for
+    xml.att('invalid', 0);
+    xml.att('ignored', 0);
+    xml.att('inconclusive', 0);
+    xml.att('not-run', 0);
+    xml.att('errors', 0);
+
+    xml.ele('environment', {
+        'nunit-version': 'na', 'clr-version': 'na', 'os-version': os.release(),
+        platform: os.platform(), cwd: config.basePath, user: 'na', 'user-domain': 'na',
+        'machine-name': os.hostname()
+    });
+
+    xml.ele('culture-info', { 'current-culture': 'na', 'current-uiculture': 'na' });
 
     // TODO(vojta): remove once we don't care about Karma 0.10
     browsers.forEach(initliazeXmlForBrowser);
   };
 
   this.onBrowserStart = function(browser) {
-    initliazeXmlForBrowser(browser);
+      initliazeXmlForBrowser(browser);
+
+      
   };
 
-  this.onBrowserComplete = function(browser) {
+  this.onBrowserComplete = function (browser) {
+      
+
     var suite = suites[browser.id];
+
 
     if (!suite) {
       // This browser did not signal `onBrowserStart`. That happens
@@ -54,13 +90,28 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
 
     var result = browser.lastResult;
 
-    suite.att('total', result.total);
+    suite.att('type', 'TestFixture');
+    suite.att('executed', !result.skipped);
+    suite.att('result', (result.success) ? 'Success' : 'Failure');
+    
+    //suite.att('total', result.total);
     //suite.att('errors', result.disconnected || result.error ? 1 : 0);
-    suite.att('failures', result.failed);
+    //suite.att('failures', result.failed);
     //suite.att('time', (result.netTime || 0) / 1000);
 
     //suite.ele('system-out').dat(allMessages.join() + '\n');
-    //suite.ele('system-err');
+      //suite.ele('system-err');
+
+    totalSuccess = totalSuccess + result.total;
+    xml.att('total', totalSuccess);
+
+    totalFailures = totalFailures + result.failed;
+    xml.att('failures', totalFailures);
+
+    xml.att('skipped', totalSkipped);
+
+  
+
   };
 
   this.onRunComplete = function() {
@@ -86,22 +137,24 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
   };
 
   this.specSuccess = this.specSkipped = this.specFailure = function(browser, result) {
-    var spec = suites[browser.id].ele('results').ele('test-case', {
+    var spec = results[browser.id].ele('test-case', {
       name: result.description, time: ((result.time || 0) / 1000),
       description: (pkgName ? pkgName + ' ' : '') + browser.name + '.' + result.suite.join(' ').replace(/\./g, '_'),
-      executed: result.skipped ? 'False' : 'True'
-      success: result.success  ? 'True' : 'False'
+      executed: result.skipped ? 'False' : 'True',
+      success: result.success ? 'True' : 'False',
+      result: result.success ? 'Success' : 'Failure'
     });
 
-    //if (result.skipped) {
-    //  spec.ele('skipped');
-    //}
+    if (result.skipped) {
+        //spec.ele('skipped');
+        totalSkipped++;
+    }
 
-    //if (!result.success) {
+    if (!result.success) {
     //  result.log.forEach(function(err) {
     //    spec.ele('failure', {type: ''}, formatError(err));
     //  });
-    //}
+    }
   };
 
   // wait for writing all the xml files, before exiting
