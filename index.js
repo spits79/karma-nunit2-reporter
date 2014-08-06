@@ -92,7 +92,7 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
 
     suite.att('type', 'TestFixture');
     suite.att('executed', !result.skipped);
-    suite.att('result', (result.success) ? 'Success' : 'Failure');
+    suite.att('result', (result.failed) ? 'Failure' : 'Success');
     
     //suite.att('total', result.total);
     //suite.att('errors', result.disconnected || result.error ? 1 : 0);
@@ -153,7 +153,12 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     if (!result.success) {
     //  result.log.forEach(function(err) {
     //    spec.ele('failure', {type: ''}, formatError(err));
-    //  });
+        //  });
+
+        var failure = spec.ele('failure')
+        failure.ele('message').dat(result.log);
+        failure.ele('stack-trace').dat(result.suite + ' ' + result.description);
+
     }
   };
 
