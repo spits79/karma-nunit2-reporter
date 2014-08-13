@@ -24,7 +24,7 @@ npm install karma-nunit2-reporter --save-dev
 // karma.conf.js
 module.exports = function(config) {
   config.set({
-    reporters: ['progress', 'junit'],
+    reporters: ['progress', 'nunit'],
 
     // the default configuration
     nunitReporter: {
