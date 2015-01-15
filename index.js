@@ -141,8 +141,8 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
       name: result.description, time: ((result.time || 0) / 1000),
       description: (pkgName ? pkgName + ' ' : '') + browser.name + '.' + result.suite.join(' ').replace(/\./g, '_'),
       executed: result.skipped ? 'False' : 'True',
-      success: result.success ? 'True' : 'False',
-      result: result.success ? 'Success' : 'Failure'
+      success: (result.success || result.skipped) ? 'True' : 'False', // Skipped tests are successful
+      result: (result.success || result.skipped) ? 'Success' : 'Failure'
     });
 
     if (result.skipped) {
