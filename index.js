@@ -150,7 +150,7 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
         totalSkipped++;
     }
 
-    if (!result.success) {
+    if (!result.success && !result.skipped) {
     //  result.log.forEach(function(err) {
     //    spec.ele('failure', {type: ''}, formatError(err));
         //  });
