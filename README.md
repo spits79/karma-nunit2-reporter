@@ -1,3 +1,7 @@
+This project has been abondoned by me. If you would like to take over this project open an issue and I will transfer this and the NPM to you.
+
+If you have a replacement that supersedes this project, open and issue and I will link to it. 
+
 # karma-nunit2-reporter
 
 > Reporter for the NUnit XML format. A direct port from karma-junit-reporter. The name nunit2 does not reflect the version of nunit. karma-nunit-reporter is another project.
