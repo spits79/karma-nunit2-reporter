@@ -4,41 +4,31 @@ var fs = require('fs');
 var builder = require('xmlbuilder');
 
 
-var NUnitReporter = function(baseReporterDecorator, config, logger, helper, formatError) {
+var NUnitReporter = function (baseReporterDecorator, config, logger, helper, formatError) {
   var log = logger.create('reporter.nunit');
   var reporterConfig = config.nunitReporter || {};
   var pkgName = reporterConfig.suite || '';
   var outputFile = helper.normalizeWinPath(path.resolve(config.basePath, reporterConfig.outputFile
-      || 'test-results.xml'));
+    || 'test-results.xml'));
 
   var xml;
-  var suites;
-  var results;
   var pendingFileWritings = 0;
-  var fileWritingFinished = function() {};
+  var fileWritingFinished = function () { };
   var allMessages = [];
   var totalSuccess = 0;
   var totalFailures = 0;
   var totalSkipped = 0;
+  var suiteList = {};
 
   baseReporterDecorator(this);
 
-  this.adapters = [function(msg) {
+  this.adapters = [function (msg) {
     allMessages.push(msg);
   }];
 
-  var initliazeXmlForBrowser = function(browser) {
+  var initliazeXmlForBrowser = function (browser) { };
 
-    var suite = suites[browser.id] = xml.ele('test-suite', {
-      name: browser.name
-    });
-    
-    results[browser.id] = suite.ele('results');
-
-    //suite.ele('properties').ele('property', {name: 'browser.fullName', value: browser.fullName});
-  };
-
-  this.onRunStart = function(browsers) {
+  this.onRunStart = function (browsers) {
     suites = Object.create(null);
     results = Object.create(null);
     xml = builder.create('test-results');
@@ -59,9 +49,9 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     xml.att('errors', 0);
 
     xml.ele('environment', {
-        'nunit-version': 'na', 'clr-version': 'na', 'os-version': os.release(),
-        platform: os.platform(), cwd: config.basePath, user: 'na', 'user-domain': 'na',
-        'machine-name': os.hostname()
+      'nunit-version': 'na', 'clr-version': 'na', 'os-version': os.release(),
+      platform: os.platform(), cwd: config.basePath, user: 'na', 'user-domain': 'na',
+      'machine-name': os.hostname()
     });
 
     xml.ele('culture-info', { 'current-culture': 'na', 'current-uiculture': 'na' });
@@ -70,56 +60,24 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     browsers.forEach(initliazeXmlForBrowser);
   };
 
-  this.onBrowserStart = function(browser) {
-      initliazeXmlForBrowser(browser);
+  this.onBrowserStart = function (browser) {
+    initliazeXmlForBrowser(browser);
 
-      
+
   };
 
   this.onBrowserComplete = function (browser) {
-      
-
-    var suite = suites[browser.id];
-
-
-    if (!suite) {
-      // This browser did not signal `onBrowserStart`. That happens
-      // if the browser timed out during the start phase.
-      return;
-    }
-
-    var result = browser.lastResult;
-
-    suite.att('type', 'TestFixture');
-    suite.att('executed', !result.skipped);
-    suite.att('result', (result.failed) ? 'Failure' : 'Success');
-    
-    //suite.att('total', result.total);
-    //suite.att('errors', result.disconnected || result.error ? 1 : 0);
-    //suite.att('failures', result.failed);
-    //suite.att('time', (result.netTime || 0) / 1000);
-
-    //suite.ele('system-out').dat(allMessages.join() + '\n');
-      //suite.ele('system-err');
-
-    totalSuccess = totalSuccess + result.total;
     xml.att('total', totalSuccess);
-
-    totalFailures = totalFailures + result.failed;
     xml.att('failures', totalFailures);
-
     xml.att('skipped', totalSkipped);
-
-  
-
   };
 
-  this.onRunComplete = function() {
+  this.onRunComplete = function () {
     var xmlToOutput = xml;
 
     pendingFileWritings++;
-    helper.mkdirIfNotExists(path.dirname(outputFile), function() {
-      fs.writeFile(outputFile, xmlToOutput.end({pretty: true}), function(err) {
+    helper.mkdirIfNotExists(path.dirname(outputFile), function () {
+      fs.writeFile(outputFile, xmlToOutput.end({ pretty: true }), function (err) {
         if (err) {
           log.warn('Cannot write NUnit xml\n\t' + err.message);
         } else {
@@ -136,8 +94,23 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     allMessages.length = 0;
   };
 
-  this.specSuccess = this.specSkipped = this.specFailure = function(browser, result) {
-    var spec = results[browser.id].ele('test-case', {
+  this.specSuccess = this.specSkipped = this.specFailure = function (browser, result) {
+    var suiteName = (pkgName ? pkgName + ' ' : '') + result.suite.join(' ').replace(/\./g, '_');
+    var suiteResults;
+    if (!suiteList[suiteName]) {
+      var suite = xml.ele('test-suite', {
+        name: suiteName
+      });
+      suite.att('type', 'TestFixture');
+      suite.att('executed', !result.skipped);
+      suite.att('result', (result.failed) ? 'Failure' : 'Success');
+      suiteResults = suite.ele('results');
+      suiteList[suiteName] = suite;
+    } else {
+      suiteResults = suiteList[suiteName].children[0];
+    }
+
+    var spec = suiteResults.ele('test-case', {
       name: result.description, time: ((result.time || 0) / 1000),
       description: (pkgName ? pkgName + ' ' : '') + browser.name + '.' + result.suite.join(' ').replace(/\./g, '_'),
       executed: result.skipped ? 'False' : 'True',
@@ -146,24 +119,23 @@ var NUnitReporter = function(baseReporterDecorator, config, logger, helper, form
     });
 
     if (result.skipped) {
-        //spec.ele('skipped');
-        totalSkipped++;
+      totalSkipped++;
+    } else if (result.success) {
+      totalSuccess++;
     }
 
     if (!result.success && !result.skipped) {
-    //  result.log.forEach(function(err) {
-    //    spec.ele('failure', {type: ''}, formatError(err));
-        //  });
-
-        var failure = spec.ele('failure')
-        failure.ele('message').dat(result.log);
-        failure.ele('stack-trace').dat(result.suite + ' ' + result.description);
+      suiteList[suiteName].attributes.result = 'Failure';
+      var failure = spec.ele('failure')
+      failure.ele('message').dat(result.log);
+      failure.ele('stack-trace').dat(result.suite + ' ' + result.description);
+      totalFailures++;
 
     }
   };
 
   // wait for writing all the xml files, before exiting
-  this.onExit = function(done) {
+  this.onExit = function (done) {
     if (pendingFileWritings) {
       fileWritingFinished = done;
     } else {
