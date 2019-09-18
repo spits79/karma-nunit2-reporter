@@ -99,11 +99,9 @@ var NUnitReporter = function (baseReporterDecorator, config, logger, helper, for
     var suiteResults;
     
     if (!suiteList[suiteName]) {
-      // console.log(xml);
       var testSuite = xml.ele('test-suite', {
         name: suiteName
       });
-      // thing.att('name', result.description);
       testSuite.att('result', (result.failed) ? 'Failure' : 'Success');
       testSuite.att('executed', !result.skipped);
       testSuite.att('type', 'TestSuite');
@@ -116,8 +114,6 @@ var NUnitReporter = function (baseReporterDecorator, config, logger, helper, for
       suite.att('result', (result.failed) ? 'Failure' : 'Success');
       suiteResults = suite.ele('results');
       suiteList[suiteName] = suite;
-      // console.log(suite)
-      // console.log('------------');
     } else {
       suiteResults = suiteList[suiteName].children[0];
     }
